@@ -533,16 +533,28 @@ function calculateResult() {
   const AMP = 1.3;
   normalized = normalized.map(s => Math.round(Math.max(0, Math.min(100, 50 + (s - 50) * AMP))));
 
-  // Find closest flower by Euclidean distance in 5D space
-  let bestFlower = null, bestDist = Infinity;
-  flowers.forEach(f => {
+  // Weighted probability sampling instead of deterministic closest-match.
+  // This ensures: (a) consistent preferences → correct flower with high probability,
+  // (b) random/indifferent answers → roughly even distribution across all flowers.
+  const distances = flowers.map(f => {
     let dist = 0;
-    for (let d = 0; d < 5; d++) {
-      dist += Math.pow(normalized[d] - f.coords[d], 2);
-    }
-    dist = Math.sqrt(dist);
-    if (dist < bestDist) { bestDist = dist; bestFlower = f; }
+    for (let d = 0; d < 5; d++) dist += Math.pow(normalized[d] - f.coords[d], 2);
+    return Math.sqrt(dist);
   });
+
+  // Convert distance to weight: closer = higher weight
+  // SMOOTH prevents division by zero; POWER controls how selective the matching is
+  const SMOOTH = 6, POWER = 3;
+  const weights = distances.map(d => Math.pow(1 / (d + SMOOTH), POWER));
+  const totalWeight = weights.reduce((a, b) => a + b, 0);
+
+  // Weighted random selection (roulette wheel)
+  let r = Math.random() * totalWeight;
+  let bestFlower = flowers[flowers.length - 1]; // fallback
+  for (let i = 0; i < weights.length; i++) {
+    r -= weights[i];
+    if (r <= 0) { bestFlower = flowers[i]; break; }
+  }
 
   bestFlower.userScores = normalized;
   return bestFlower;
