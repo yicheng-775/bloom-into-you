@@ -15,6 +15,10 @@
 - html2canvas 海报生成
 - 水彩风格 CSS 渲染
 
-## 使用
+## 在线体验
+
+🌐 **[yicheng-775.github.io/bloom-into-you](https://yicheng-775.github.io/bloom-into-you/)**
+
+## 本地使用
 
 直接在浏览器打开 `index.html` 即可。
