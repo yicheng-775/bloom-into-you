@@ -342,7 +342,7 @@ body {
       <h1 class="home-logo">花开成你</h1>
       <p class="home-subtitle">你是一朵怎样的花？</p>
       <button class="btn-start" onclick="startTest()">开 始 探 索</button>
-      <p class="home-footer">基于大五人格模型 · 30题深度版 · 3~5分钟</p>
+      <p class="home-footer">基于大五人格模型 · 30题深度版 · 3~5分钟<br><span style="opacity:0.5;font-size:0.75rem;">v2.1 — 加权概率匹配</span></p>
     </div>
   </section>
 
@@ -548,12 +548,14 @@ function calculateResult() {
   const weights = distances.map(d => Math.pow(1 / (d + SMOOTH), POWER));
   const totalWeight = weights.reduce((a, b) => a + b, 0);
 
-  // Weighted random selection (roulette wheel)
-  let r = Math.random() * totalWeight;
-  let bestFlower = flowers[flowers.length - 1]; // fallback
+  // Weighted random selection using cumulative comparison
+  // (avoids floating-point edge cases from repeated subtraction)
+  const roll = Math.random() * totalWeight;
+  let cumulative = 0;
+  let bestFlower = flowers[0];
   for (let i = 0; i < weights.length; i++) {
-    r -= weights[i];
-    if (r <= 0) { bestFlower = flowers[i]; break; }
+    cumulative += weights[i];
+    if (roll < cumulative) { bestFlower = flowers[i]; break; }
   }
 
   bestFlower.userScores = normalized;
